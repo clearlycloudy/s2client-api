@@ -60,14 +60,13 @@ ProtoInterface::ProtoInterface() :
     port_(5000),
     default_timeout_ms_(kDefaultProtoInterfaceTimeout),
     latest_status_(SC2APIProtocol::Status::unknown),
-    response_pending_(SC2APIProtocol::Response::RESPONSE_NOT_SET),
-    error_callback_() {
+    response_pending_(SC2APIProtocol::Response::RESPONSE_NOT_SET) {
 }
 
 bool ProtoInterface::ConnectToGame(const std::string& address, int port, int timeout_ms) {
     latest_status_ = SC2APIProtocol::Status::unknown;
     address_ = address;
-    port = port;
+    port_ = port;
     default_timeout_ms_ = timeout_ms;
     if (!connection_.Connect(address, port, false)) {
         return false;
@@ -168,18 +167,25 @@ bool ProtoInterface::PingGame() {
     // Wait for the return of the ping.
     // TODO: Implement a time out here.
     GameResponsePtr response = WaitForResponseInternal();
-    if (response.get()) {
-        return true;
+    if (!response.get() || !response->has_ping()) {
+        return false;
     }
-    return false;
+
+    const auto& response_ping = response->ping();
+    base_build_ = response_ping.base_build();
+    data_version_ = response_ping.data_version();
+    return true;
 }
 
 void ProtoInterface::Quit() {
+    // Tell the game to close
     GameRequestPtr request = MakeRequest();
     request->mutable_quit();
-    if (!SendRequest(request)) {
-        return;
-    }
+    SendRequest(request);
+
+    // Immediately tear down connection. The callbacks may try to call into objects who are
+    // in the process of being destroyed.
+    connection_.Disconnect();
 }
 
 void ProtoInterface::SetErrorCallback(std::function<void(const std::string& error_str)> error_callback) {

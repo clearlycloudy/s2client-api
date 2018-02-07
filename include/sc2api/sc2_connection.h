@@ -63,6 +63,9 @@ public:
     //!< \return true if the connection is valid, false otherwise.
     bool HasConnection() const;
 
+    //! Disconnect from the game if currently connected.
+    void Disconnect();
+
     //! Polls the queue in a thread safe way to check if a message has been received.
     //!< \return true if there is a response in the queue, false otherwise.
     bool PollResponse();
@@ -77,9 +80,10 @@ public:
     std::function<void()> timeout_callback_;             //!< Timeout callback.
     std::function<void()> connection_closed_callback_;   //!< Timeout callback.
 
+    mg_connection* connection_;                          //!< A pointer to the civetweb connection object.
+
 private:
     bool verbose_;                                   //!< Will print extra information to console if enabled.
-    mg_connection* connection_;                      //!< A pointer to the civetweb connection object.
 
     std::deque<SC2APIProtocol::Response*> queue_; //!< A queue that contains responses received off the socket.
     std::mutex mutex_;                               //!< Mutex used in conjunction with the condition.

@@ -46,6 +46,11 @@ enum PlayerType {
     Observer = 3
 };
 
+enum class ChatChannel {
+    All = 0,
+    Team = 1
+};
+
 class Agent;
 
 //! Setup for a player in a game.
@@ -165,6 +170,7 @@ struct ReplayInfo {
     std::string map_path;
     std::string replay_path;
     std::string version;
+    std::string data_version;
     ReplayPlayerInfo players[max_num_players];
 
     ReplayInfo() :
@@ -191,19 +197,16 @@ struct ReplayInfo {
     }
 };
 
-//! Power source information for Protoss.
-struct PowerSource {
-    PowerSource(const Point2D in_position, float in_radius, Tag in_tag) :
-        position(in_position),
-        radius(in_radius),
-        tag(in_tag) {};
+struct PlayerResult {
+    PlayerResult(uint32_t player_id, GameResult result) : player_id(player_id), result(result) {};
 
-    //! Power source position.
-    Point2D position;
-    //! Power source radius.
-    float radius;
-    //! Unit tag of the power source.
-    Tag tag;
+    uint32_t player_id;
+    GameResult result;
+};
+
+struct ChatMessage {
+    uint32_t player_id;
+    std::string message;
 };
 
 }

@@ -96,7 +96,8 @@ namespace sc2 {
             ReportError("Supply Count is Incorrect");
         }
         if (obs->GetFoodCap() != 16) {
-            ReportError("Supply cap is Incorrect the supply is reporting 16 instead of " + obs->GetFoodCap());
+            std::string errorStr = "Supply cap is Incorrect the supply is reporting 16 instead of " + std::to_string(obs->GetFoodCap());
+            ReportError(errorStr.c_str());
         }
         if (obs->GetWarpGateCount() != 1) {
             ReportError("Warp gate Count is Incorrect");
@@ -125,7 +126,6 @@ namespace sc2 {
     class TestGetResources : public TestSequence {
         void OnTestStart() {
             wait_game_loops_ = 10;
-            const ObservationInterface* obs = agent_->Observation();
             agent_->Debug()->DebugGiveAllResources();
             agent_->Debug()->SendDebug();
         }
@@ -137,92 +137,6 @@ namespace sc2 {
             if (obs->GetVespene() != 5000) {
                 ReportError("Incorrect Vespene Count");
             }
-        }
-    };
-
-    class TestGetPreviousUnit : public TestSequence {
-    public:
-        uint32_t starting_game_loop;
-        void OnTestStart() {
-            wait_game_loops_ = 10;
-            starting_game_loop = agent_->Observation()->GetGameLoop();
-            const GameInfo& game_info = agent_->Observation()->GetGameInfo();
-            Point2D origin_pt_ = FindCenterOfMap(game_info);
-            agent_->Debug()->DebugCreateUnit(UNIT_TYPEID::TERRAN_MARINE, origin_pt_, agent_->Observation()->GetPlayerID(), 1);
-            agent_->Debug()->SendDebug();
-           
-        }
-
-        void OnStep() {
-            const ObservationInterface* obs = agent_->Observation();
-
-            //Throttle actions
-            if (obs->GetGameLoop() == starting_game_loop + 2) {
-                Units units = obs->GetUnits(Unit::Self, IsUnit(UNIT_TYPEID::TERRAN_MARINE));
-                if (units.empty()) {
-                    ReportError("No Unit Made");
-                }
-
-                agent_->Actions()->UnitCommand(units.front().tag, ABILITY_ID::EFFECT_STIM);
-            }
-
-            if (obs->GetGameLoop() == starting_game_loop + 3) {
-                Units units = obs->GetUnits(Unit::Self, IsUnit(UNIT_TYPEID::TERRAN_MARINE));
-                if (units.empty()) {
-                    ReportError("No Unit Made");
-                }
-
-                const Unit* previous_unit = obs->GetPreviousUnit(units.front().tag);
-                if (previous_unit->health != units.front().health_max && units.front().health != units.front().health_max - 10) {
-                    ReportError("Get Previous Unit did not return the correct unit");
-                }
-            }
-        }
-        void OnTestFinish() {
-            KillAllUnits();
-        }
-    };
-
-    class TestGetUnitQueries : public TestSequence {
-    public:
-        uint32_t starting_game_loop;
-        void OnTestStart() {
-            wait_game_loops_ = 10;
-            starting_game_loop = agent_->Observation()->GetGameLoop();
-
-        }
-
-        void OnStep() {
-            const ObservationInterface* obs = agent_->Observation();
-            const GameInfo& game_info = agent_->Observation()->GetGameInfo();
-            Point2D origin_pt_ = FindCenterOfMap(game_info);
-            //Throttle actions
-            if (obs->GetGameLoop() == starting_game_loop + 2) {
-                agent_->Debug()->DebugCreateUnit(UNIT_TYPEID::PROTOSS_ZEALOT, origin_pt_, agent_->Observation()->GetPlayerID(), 1);
-                agent_->Debug()->SendDebug();
-            }
-            //Debug Messages take a while to send
-            if (obs->GetGameLoop() == starting_game_loop + 4) {
-                Units units_added = obs->GetUnitsAdded();
-                if (units_added.empty()) {
-                    ReportError("No units Reported from GetUnitsAdded() ");
-                }
-            }
-
-            if (obs->GetGameLoop() == starting_game_loop + 5) {
-                KillAllUnits();
-            }
-
-            if (obs->GetGameLoop() == starting_game_loop + 7) {
-                Units units_removed = obs->GetUnitsRemoved();
-                if (units_removed.empty()) {
-                    ReportError("No units returned from getUnitsRemoved()");
-                }
-            }
-        }
-
-        void OnTestFinish() {
-            KillAllUnits();
         }
     };
 
@@ -246,15 +160,15 @@ namespace sc2 {
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.cargo_size != 2) {
-                std::string errorStr = "UnitTypeData is reporting an incorrect cargo value. Expected : 0 Result : " + stalker_data.cargo_size;
+                std::string errorStr = "UnitTypeData is reporting an incorrect cargo value. Expected : 0 Result : " + std::to_string(stalker_data.cargo_size);
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.mineral_cost != 125) {
-                std::string errorStr = "UnitTypeData is reporting an incorrect mineral cost value. Expected : 125 Result : " + stalker_data.mineral_cost;
+                std::string errorStr = "UnitTypeData is reporting an incorrect mineral cost value. Expected : 125 Result : " + std::to_string(stalker_data.mineral_cost);
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.vespene_cost != 50) {
-                std::string errorStr = "UnitTypeData is reporting an incorrect vespene value. Expected : 50 Result : " + stalker_data.vespene_cost;
+                std::string errorStr = "UnitTypeData is reporting an incorrect vespene value. Expected : 50 Result : " + std::to_string(stalker_data.vespene_cost);
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.name != "Stalker") {
@@ -262,7 +176,7 @@ namespace sc2 {
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.unit_type_id != UNIT_TYPEID::PROTOSS_STALKER) {
-                std::string errorStr = "UnitTypeData is reporting an incorrect unittypeID Expected : 74 Result : " + stalker_data.unit_type_id;
+                std::string errorStr = "UnitTypeData is reporting an incorrect unittypeID Expected : 74 Result : " + std::to_string(stalker_data.unit_type_id);
                 ReportError(errorStr.c_str());
             }
             if (stalker_data.weapons.empty()) {
@@ -300,8 +214,6 @@ TestObservationBot::TestObservationBot() :
     Add(TestGetFoodCount());
     Add(TestGetBuffData());
     Add(TestGetResources());
-    Add(TestGetPreviousUnit());
-    Add(TestGetUnitQueries());
 }
 
 void TestObservationBot::OnTestsBegin() {

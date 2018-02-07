@@ -36,9 +36,8 @@ class UnitTestBot : public Agent {
 public:
     UnitTestBot() :
         success_(true),
-        game_loop_done_(2),
         current_sequence_(-1),
-        Agent() {
+        game_loop_done_(2) {
     }
 
     bool IsFinished() const {
@@ -58,7 +57,7 @@ protected:
     virtual void OnTestsEnd () = 0;
     virtual void OnPostStep () {}
 
-    void OnError(const std::vector<ClientError>& client_errors, const std::vector<std::string>& protocol_errors = {}) override { success_ = false; }
+    void OnError(const std::vector<ClientError>& /*client_errors*/, const std::vector<std::string>& /*protocol_errors*/ = {}) override { success_ = false; }
 
 private:
     void OnGameStart() final;
@@ -67,12 +66,12 @@ private:
 
     // Other forwarded events.
     void OnGameFullStart() final;
-    void OnUnitDestroyed(const Unit& unit) final;
-    void OnUnitCreated(const Unit& unit) final;
-    void OnUnitIdle(const Unit& unit) final;
-    void OnUnitEnterVision(const Unit& unit) final;
+    void OnUnitDestroyed(const Unit* unit) final;
+    void OnUnitCreated(const Unit* unit) final;
+    void OnUnitIdle(const Unit* unit) final;
+    void OnUnitEnterVision(const Unit* unit) final;
     void OnUpgradeCompleted(UpgradeID upgrade) final;
-    void OnBuildingConstructionComplete(const Unit& unit) final;
+    void OnBuildingConstructionComplete(const Unit* unit) final;
     void OnNydusDetected() final;
     void OnNuclearLaunchDetected() final;
 
